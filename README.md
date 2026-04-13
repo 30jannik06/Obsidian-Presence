@@ -31,7 +31,7 @@ Show your Obsidian activity on Discord via Rich Presence.
    ```
    mkdir .obsidian\plugins
    cd .obsidian\plugins
-   git clone https://github.com/your-name/obsidian-presence.git
+   git clone https://github.com/30jannik06/obsidian-presence.git
    cd obsidian-presence
    ```
 3. Install dependencies and build:
