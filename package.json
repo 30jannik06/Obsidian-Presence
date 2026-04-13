@@ -1,0 +1,29 @@
+{
+  "name": "obsidian-presence",
+  "version": "1.0.0",
+  "description": "Discord Rich Presence for Obsidian",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "discord",
+    "rich-presence"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.1",
+  "devDependencies": {
+    "@types/discord-rpc": "^4.0.10",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "obsidian": "latest",
+    "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
+  }
+}

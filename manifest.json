@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-presence",
+  "name": "Obsidian Presence",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Show your Obsidian activity on Discord via Rich Presence.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": true
+}
