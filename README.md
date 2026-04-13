@@ -9,18 +9,30 @@ Show your Obsidian activity on Discord via Rich Presence.
 - Elapsed timer (total session or per-file)
 - Auto-reconnects if Discord is closed and reopened
 - Status bar indicator with click-to-reconnect
+- Custom Discord Application support (bring your own Client ID + images)
 - Configurable via settings tab
 
 ## Settings
 
 | Setting | Description |
 |---|---|
+| Discord Client ID | Your own Discord Application Client ID for custom images. Leave empty to use the default. |
 | Show vault name | Toggle vault name in Discord status |
 | Custom vault name | Override the displayed vault name |
 | Show file name | Toggle current file name in status |
 | Show file extension | Toggle `.md` extension in file name |
 | Per-file timer | Reset timer on each new file vs. total session time |
 | Show connection notices | Show notice on Discord connect |
+
+## Custom Discord Application
+
+By default the plugin uses a shared Discord Application with the Obsidian logo. If you want your own images and branding:
+
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
+2. Create a new application
+3. Under **Rich Presence → Art Assets**, upload images named `obsidian`, `editing` and `reading`
+4. Copy your Application's **Client ID**
+5. Paste it into the **Discord Client ID** setting — the plugin reconnects automatically
 
 ## Installation
 
@@ -36,16 +48,16 @@ Show your Obsidian activity on Discord via Rich Presence.
    ```
 3. Install dependencies and build:
    ```
-   npm install
-   npm run build
+   pnpm install
+   pnpm run build
    ```
 4. In Obsidian: Settings → Community Plugins → turn off Restricted Mode → enable **Obsidian Presence**
 
 ### Development
 
 ```bash
-npm run dev   # watch mode with sourcemaps
-npm run build # production build
+pnpm run dev   # watch mode with sourcemaps
+pnpm run build # production build
 ```
 
 ## Requirements
