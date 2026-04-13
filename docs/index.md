@@ -6,7 +6,7 @@ title: Obsidian Presence
 
 Show your Obsidian activity on Discord via Rich Presence — automatically displays what you're working on right in your Discord profile.
 
-![Discord Rich Presence showing vault name, file and timer](../assets/Example.png)
+![Discord Rich Presence showing vault name, file and timer](https://raw.githubusercontent.com/30jannik06/Obsidian-Presence/main/assets/Example.png)
 
 ## Features
 
