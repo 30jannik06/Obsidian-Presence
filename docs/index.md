@@ -22,6 +22,7 @@ Show your Obsidian activity on Discord via Rich Presence — automatically displ
 - [Installation](installation)
 - [Configuration](configuration)
 - [Custom Discord App](custom-app)
+- [Changelog](changelog)
 - [GitHub](https://github.com/30jannik06/obsidian-presence)
 
 ## Requirements
