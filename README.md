@@ -2,6 +2,8 @@
 
 Show your Obsidian activity on Discord via Rich Presence.
 
+**[Documentation](https://30jannik06.github.io/Obsidian-Presence/)**
+
 ## Features
 
 - Displays your current vault and file name in Discord
