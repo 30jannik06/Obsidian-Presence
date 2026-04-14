@@ -9,8 +9,12 @@ export default class ObsidianPresencePlugin extends Plugin {
   private pluginStartTime = 0;
   private fileStartTime = 0;
   private currentFile: string | null = null;
+  private currentFilePath: string | null = null;
   private currentMode: "source" | "preview" = "source";
   private statusBarItem!: HTMLElement;
+  private lastInteractionTime = 0;
+  private lastReconnectAttempt = 0;
+  private readonly reconnectCooldownMs = 5000;
   settingsTab: PresenceSettingTab | null = null;
 
   async onload() {
@@ -18,6 +22,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 
     this.pluginStartTime = Date.now();
     this.fileStartTime = Date.now();
+    this.lastInteractionTime = Date.now();
 
     this.rpcManager = new RpcManager(
       () => {
@@ -37,7 +42,19 @@ export default class ObsidianPresencePlugin extends Plugin {
     this.statusBarItem.style.cursor = "pointer";
     this.setStatusBar(false);
     this.registerDomEvent(this.statusBarItem, "click", () => {
-      if (!this.rpcManager.connected) {
+      if (this.settings.paused) {
+        this.settings.paused = false;
+        this.saveSettings();
+        this.setStatusBar(this.rpcManager.connected);
+        this.updateActivity();
+        this.settingsTab?.display();
+      } else if (this.rpcManager.connected) {
+        this.settings.paused = true;
+        this.saveSettings();
+        this.setStatusBar(this.rpcManager.connected);
+        this.rpcManager.clearActivity();
+        this.settingsTab?.display();
+      } else {
         this.reconnect();
       }
     });
@@ -46,6 +63,8 @@ export default class ObsidianPresencePlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
         this.currentFile = file?.name ?? null;
+        this.currentFilePath = file?.path ?? null;
+        this.lastInteractionTime = Date.now();
         if (this.settings.usePerFileTimer) {
           this.fileStartTime = Date.now();
         }
@@ -60,8 +79,16 @@ export default class ObsidianPresencePlugin extends Plugin {
         if (view) {
           const mode = view.getMode();
           this.currentMode = mode === "preview" ? "preview" : "source";
+          this.lastInteractionTime = Date.now();
           this.updateActivity();
         }
+      })
+    );
+
+    // Track typing (for idle detection)
+    this.registerEvent(
+      this.app.workspace.on("editor-change", () => {
+        this.lastInteractionTime = Date.now();
       })
     );
 
@@ -74,12 +101,48 @@ export default class ObsidianPresencePlugin extends Plugin {
       callback: () => this.reconnect(),
     });
 
-    // Connect and auto-reconnect every 15s
+    this.addCommand({
+      id: "toggle-pause",
+      name: "Toggle Presence Pause",
+      callback: () => {
+        this.settings.paused = !this.settings.paused;
+        this.saveSettings();
+        this.setStatusBar(this.rpcManager.connected);
+        if (this.settings.paused) {
+          this.rpcManager.clearActivity();
+        } else {
+          this.updateActivity();
+        }
+        this.settingsTab?.display();
+      },
+    });
+
+    // Connect and auto-reconnect every 15s + idle check
     this.reconnect();
     this.registerInterval(
       window.setInterval(() => {
-        if (!this.rpcManager.connected) {
+        if (!this.rpcManager.connected && !this.settings.paused) {
           this.reconnect();
+        }
+        if (
+          this.settings.idleDetectionEnabled &&
+          this.rpcManager.connected &&
+          !this.settings.paused
+        ) {
+          const idleMs = this.settings.idleTimeoutMinutes * 60_000;
+          if (Date.now() - this.lastInteractionTime > idleMs) {
+            if (this.settings.idleAction === "afk") {
+              this.rpcManager.setActivity(
+                "Away from keyboard",
+                "AFK",
+                this.pluginStartTime,
+                this.currentMode,
+                [],
+              );
+            } else {
+              this.rpcManager.clearActivity();
+            }
+          }
         }
       }, 15_000)
     );
@@ -94,14 +157,32 @@ export default class ObsidianPresencePlugin extends Plugin {
   }
 
   reconnect(): void {
+    const now = Date.now();
+    if (now - this.lastReconnectAttempt < this.reconnectCooldownMs) return;
+    this.lastReconnectAttempt = now;
     this.rpcManager.connect(this.settings);
   }
 
   updateActivity(): void {
+    this.lastInteractionTime = Date.now();
+
+    if (this.settings.paused) {
+      this.rpcManager.clearActivity();
+      return;
+    }
+
+    if (this.isExcluded(this.currentFilePath)) {
+      this.rpcManager.clearActivity();
+      return;
+    }
+
     const { settings } = this;
+    const modeLabel = this.currentMode === "preview" ? "Reading" : "Editing";
 
     let details: string;
-    if (settings.showFileName && this.currentFile) {
+    if (settings.customDetailsFormat) {
+      details = this.applyFormat(settings.customDetailsFormat);
+    } else if (settings.showFileName && this.currentFile) {
       if (settings.showFileExtension) {
         details = this.currentFile;
       } else {
@@ -114,11 +195,15 @@ export default class ObsidianPresencePlugin extends Plugin {
       details = "No file open";
     }
 
-    const vaultName = settings.showVaultName
-      ? (settings.customVaultName.trim() || this.app.vault.getName())
-      : null;
-    const modeLabel = this.currentMode === "preview" ? "Reading" : "Editing";
-    const state = vaultName ? `${modeLabel} in ${vaultName}` : modeLabel;
+    let state: string;
+    if (settings.customStateFormat) {
+      state = this.applyFormat(settings.customStateFormat);
+    } else {
+      const vaultName = settings.showVaultName
+        ? (settings.customVaultName.trim() || this.app.vault.getName())
+        : null;
+      state = vaultName ? `${modeLabel} in ${vaultName}` : modeLabel;
+    }
 
     const startTimestamp = settings.usePerFileTimer
       ? this.fileStartTime
@@ -127,14 +212,43 @@ export default class ObsidianPresencePlugin extends Plugin {
     this.rpcManager.setActivity(details, state, startTimestamp, this.currentMode, this.settings.buttons);
   }
 
+  private isExcluded(filePath: string | null): boolean {
+    if (!filePath || !this.settings.excludePatterns.trim()) return false;
+    const patterns = this.settings.excludePatterns
+      .split("\n")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    return patterns.some((p) => filePath.includes(p));
+  }
+
+  private applyFormat(template: string): string {
+    const vaultName = this.settings.customVaultName.trim() || this.app.vault.getName();
+    const modeLabel = this.currentMode === "preview" ? "Reading" : "Editing";
+    const fileName = this.currentFile ?? "";
+    const dotIndex = fileName.lastIndexOf(".");
+    const fileNoExt = dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+
+    return template
+      .replace(/{file}/g, fileName)
+      .replace(/{fileNoExt}/g, fileNoExt)
+      .replace(/{vault}/g, vaultName)
+      .replace(/{mode}/g, modeLabel);
+  }
+
   private setStatusBar(connected: boolean): void {
     this.statusBarItem.empty();
     const dot = this.statusBarItem.createSpan();
-    dot.setText("⬤ Discord");
-    dot.style.color = connected ? "var(--color-green)" : "var(--color-red)";
-    dot.title = connected
-      ? "Connected to Discord"
-      : "Not connected to Discord — click to reconnect";
+    if (this.settings.paused) {
+      dot.setText("⏸ Discord");
+      dot.style.color = "var(--color-yellow)";
+      dot.title = "Discord Presence is paused — click to resume";
+    } else {
+      dot.setText("⬤ Discord");
+      dot.style.color = connected ? "var(--color-green)" : "var(--color-red)";
+      dot.title = connected
+        ? "Connected to Discord — click to pause"
+        : "Not connected to Discord — click to reconnect";
+    }
   }
 
   async loadSettings() {

@@ -63,7 +63,9 @@ export class RpcManager {
   ): void {
     if (!this._connected || !this.rpc) return;
 
-    const activeButtons = buttons.filter((b) => b.label.trim() && b.url.trim());
+    const activeButtons = buttons.filter(
+      (b) => b.label.trim() && b.url.startsWith("https://"),
+    );
 
     this.rpc
       .setActivity({
@@ -81,5 +83,12 @@ export class RpcManager {
         this._connected = false;
         this.onDisconnected();
       });
+  }
+
+  clearActivity(): void {
+    if (!this._connected || !this.rpc) return;
+    this.rpc.clearActivity().catch((err: Error) => {
+      console.debug("[obsidian-presence] clearActivity error:", err.message);
+    });
   }
 }

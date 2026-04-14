@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type ObsidianPresencePlugin from "./main";
 import { DEFAULT_CLIENT_ID } from "./types";
 
@@ -16,7 +16,7 @@ export class PresenceSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Obsidian Presence Settings" });
 
-    // Connection status + reconnect button
+    // Connection status + reconnect + pause
     new Setting(containerEl)
       .setName("Discord connection")
       .setDesc(this.plugin.connected ? "🟢 Connected" : "🔴 Not connected")
@@ -25,10 +25,23 @@ export class PresenceSettingTab extends PluginSettingTab {
           .setButtonText("Reconnect")
           .onClick(() => {
             this.plugin.reconnect();
-            // Re-render after a short delay to let the connection state update
-            setTimeout(() => this.display(), 1500);
+            btn.setDisabled(true);
+            btn.setButtonText("Reconnecting…");
+            setTimeout(() => this.display(), 5000);
           })
-      );
+      )
+      .addButton((btn) => {
+        const paused = this.plugin.settings.paused;
+        btn
+          .setButtonText(paused ? "Resume" : "Pause")
+          .setCta()
+          .onClick(async () => {
+            this.plugin.settings.paused = !this.plugin.settings.paused;
+            await this.plugin.saveSettings();
+            this.plugin.updateActivity();
+            this.display();
+          });
+      });
 
     // Custom Client ID
     new Setting(containerEl)
@@ -135,10 +148,113 @@ export class PresenceSettingTab extends PluginSettingTab {
         })
       );
 
-    // Buttons
+    // ── Custom Status Format ───────────────────────────────────────────────
+    containerEl.createEl("h3", { text: "Custom Status Format" });
+    containerEl.createEl("p", {
+      text: "Override the text shown in Discord. Leave empty to use the default. " +
+        "Available placeholders: {file}, {fileNoExt}, {vault}, {mode}",
+      cls: "setting-item-description",
+    });
+
+    new Setting(containerEl)
+      .setName("Details format")
+      .setDesc("Top line on the Discord status (e.g. \"Editing {fileNoExt}\").")
+      .addText((text) =>
+        text
+          .setPlaceholder("Editing {fileNoExt}")
+          .setValue(this.plugin.settings.customDetailsFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.customDetailsFormat = value;
+            await this.plugin.saveSettings();
+            this.plugin.updateActivity();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("State format")
+      .setDesc("Bottom line on the Discord status (e.g. \"{mode} in {vault}\").")
+      .addText((text) =>
+        text
+          .setPlaceholder("{mode} in {vault}")
+          .setValue(this.plugin.settings.customStateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.customStateFormat = value;
+            await this.plugin.saveSettings();
+            this.plugin.updateActivity();
+          })
+      );
+
+    // ── Exclusion List ─────────────────────────────────────────────────────
+    containerEl.createEl("h3", { text: "Exclusion List" });
+    containerEl.createEl("p", {
+      text: "Files or folders whose paths contain any of these patterns will be hidden from Discord (one pattern per line). " +
+        "Example: Privat/ or secret.md",
+      cls: "setting-item-description",
+    });
+
+    new Setting(containerEl)
+      .setName("Excluded patterns")
+      .addTextArea((area) =>
+        area
+          .setPlaceholder("Privat/\nJournal/\nsecret.md")
+          .setValue(this.plugin.settings.excludePatterns)
+          .onChange(async (value) => {
+            this.plugin.settings.excludePatterns = value;
+            await this.plugin.saveSettings();
+            this.plugin.updateActivity();
+          })
+      );
+
+    // ── Idle Detection ─────────────────────────────────────────────────────
+    containerEl.createEl("h3", { text: "Idle Detection" });
+
+    new Setting(containerEl)
+      .setName("Enable idle detection")
+      .setDesc("Automatically change or clear your presence after a period of inactivity.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.idleDetectionEnabled).onChange(async (value) => {
+          this.plugin.settings.idleDetectionEnabled = value;
+          await this.plugin.saveSettings();
+          this.display();
+        })
+      );
+
+    if (this.plugin.settings.idleDetectionEnabled) {
+      new Setting(containerEl)
+        .setName("Idle timeout (minutes)")
+        .setDesc("How long to wait before marking you as idle.")
+        .addText((text) =>
+          text
+            .setPlaceholder("10")
+            .setValue(String(this.plugin.settings.idleTimeoutMinutes))
+            .onChange(async (value) => {
+              const parsed = parseInt(value, 10);
+              if (!isNaN(parsed) && parsed > 0) {
+                this.plugin.settings.idleTimeoutMinutes = parsed;
+                await this.plugin.saveSettings();
+              }
+            })
+        );
+
+      new Setting(containerEl)
+        .setName("When idle")
+        .setDesc("What to show on Discord when you are idle.")
+        .addDropdown((drop) =>
+          drop
+            .addOption("afk", "Show \"Away from keyboard\"")
+            .addOption("clear", "Clear presence entirely")
+            .setValue(this.plugin.settings.idleAction)
+            .onChange(async (value) => {
+              this.plugin.settings.idleAction = value as "afk" | "clear";
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
+    // ── Profile Buttons ────────────────────────────────────────────────────
     containerEl.createEl("h3", { text: "Profile Buttons" });
     containerEl.createEl("p", {
-      text: "Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button.",
+      text: "Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button. URL must start with https://",
       cls: "setting-item-description",
     });
 
@@ -161,13 +277,17 @@ export class PresenceSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName(`Button ${i + 1} URL`)
-        .setDesc("Link opened when the button is clicked. Must start with https://")
+        .setDesc("Must start with https://")
         .addText((text) =>
           text
             .setPlaceholder("https://github.com/yourname/yourrepo")
             .setValue(btn.url)
             .onChange(async (value) => {
-              this.plugin.settings.buttons[i].url = value.trim();
+              const trimmed = value.trim();
+              if (trimmed && !trimmed.startsWith("https://")) {
+                new Notice("Button URL must start with https://");
+              }
+              this.plugin.settings.buttons[i].url = trimmed;
               await this.plugin.saveSettings();
               this.plugin.updateActivity();
             })

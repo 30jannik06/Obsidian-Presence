@@ -17,6 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] — 2026-04-14
+
+### Added
+- **Privacy/Pause-Mode** — pause presence via status bar click, Pause button in settings, or command palette ("Toggle Presence Pause"). Status bar shows ⏸ in yellow while paused
+- **Idle Detection** (enable/disable) — automatically shows "Away from keyboard" or clears presence after a configurable inactivity timeout. Tracks file opens, mode changes and typing
+- **Exclusion List** — hide specific files or folders from Discord (one pattern per line, matched against vault-relative path, e.g. `Privat/`)
+- **Custom Status Format** — define your own Details and State strings using `{file}`, `{fileNoExt}`, `{vault}`, `{mode}` placeholders
+
+### Fixed
+- Reconnect button disables itself for 5 seconds to prevent spam
+- Button URLs validated — must start with `https://`, invalid URLs rejected with a notice and filtered in RpcManager
+- `data.json` added to `.gitignore`
+
+---
+
 ## [1.2.0] — 2026-04-14
 
 ### Added
@@ -56,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Status bar indicator (green/red) with click-to-reconnect
 - Settings tab with 6 configurable options
 
-[Unreleased]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/30jannik06/Obsidian-Presence/releases/tag/v1.0.0

@@ -10,9 +10,13 @@ Show your Obsidian activity on Discord via Rich Presence.
 - Shows whether you're in Edit or Preview mode
 - Elapsed timer (total session or per-file)
 - Auto-reconnects if Discord is closed and reopened
-- Status bar indicator with click-to-reconnect
+- Status bar indicator with click-to-reconnect or pause
+- **Pause mode** — hide presence instantly via status bar, settings button, or command palette
+- **Idle detection** — auto-shows AFK or clears presence after configurable inactivity timeout
+- **Exclusion list** — keep specific files or folders private (e.g. `Privat/`)
+- **Custom status format** — define your own text with `{file}`, `{vault}`, `{mode}` placeholders
 - Reconnect button and live connection status in the settings tab
-- Command palette entry: **Reconnect to Discord**
+- Command palette entries: **Reconnect to Discord**, **Toggle Presence Pause**
 - Up to 2 custom profile buttons (e.g. "View Repository")
 - Custom Discord Application support (bring your own Client ID + images)
 - Configurable via settings tab
@@ -28,8 +32,14 @@ Show your Obsidian activity on Discord via Rich Presence.
 | Show file extension | Toggle `.md` extension in file name |
 | Per-file timer | Reset timer on each new file vs. total session time |
 | Show connection notices | Show notice on Discord connect |
+| Details format | Custom top line (e.g. `Editing {fileNoExt}`) |
+| State format | Custom bottom line (e.g. `{mode} in {vault}`) |
+| Excluded patterns | Newline-separated list of paths to hide (e.g. `Privat/`) |
+| Enable idle detection | Toggle idle detection |
+| Idle timeout | Minutes of inactivity before going idle |
+| When idle | Show "Away from keyboard" or clear presence entirely |
 | Button 1 / 2 label | Text shown on the button (max 32 characters) |
-| Button 1 / 2 URL | Link opened when the button is clicked |
+| Button 1 / 2 URL | Link opened when the button is clicked (must start with `https://`) |
 
 ## Profile Buttons
 
@@ -84,12 +94,19 @@ pnpm run build # production build
 
 ## Changelog
 
+### v1.3.0
+- Pause mode (status bar, settings button, command palette)
+- Idle detection with configurable timeout and action
+- Exclusion list for private files/folders
+- Custom status format with placeholders
+- Reconnect button cooldown, URL validation for buttons
+
 ### v1.2.0
-- Added live connection status indicator in the settings tab (🟢/🔴)
-- Added **Reconnect** button in the settings tab
-- Added **Reconnect to Discord** command palette entry
-- Added up to 2 configurable profile buttons with label and URL
-- Fixed: connection status now correctly updates when Discord closes unexpectedly
+- Live connection status in settings tab (🟢/🔴)
+- Reconnect button in settings tab
+- Reconnect to Discord command palette entry
+- Up to 2 configurable profile buttons
+- Fixed: connection status updates when Discord closes unexpectedly
 
 ### v1.1.0
 - Initial public release

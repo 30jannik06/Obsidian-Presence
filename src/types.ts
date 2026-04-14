@@ -14,6 +14,13 @@ export interface PresenceSettings {
   customVaultName: string;
   showConnectionNotices: boolean;
   buttons: [PresenceButton, PresenceButton];
+  paused: boolean;
+  idleDetectionEnabled: boolean;
+  idleTimeoutMinutes: number;
+  idleAction: "afk" | "clear";
+  excludePatterns: string;
+  customDetailsFormat: string;
+  customStateFormat: string;
 }
 
 export const DEFAULT_SETTINGS: PresenceSettings = {
@@ -28,4 +35,11 @@ export const DEFAULT_SETTINGS: PresenceSettings = {
     { label: "", url: "" },
     { label: "", url: "" },
   ],
+  paused: false,
+  idleDetectionEnabled: false,
+  idleTimeoutMinutes: 10,
+  idleAction: "afk",
+  excludePatterns: "",
+  customDetailsFormat: "",
+  customStateFormat: "",
 };
