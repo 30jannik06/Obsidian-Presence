@@ -14,8 +14,6 @@ export class PresenceSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Obsidian Presence Settings" });
-
     // Connection status + reconnect + pause
     new Setting(containerEl)
       .setName("Discord connection")
@@ -35,19 +33,19 @@ export class PresenceSettingTab extends PluginSettingTab {
         btn
           .setButtonText(paused ? "Resume" : "Pause")
           .setCta()
-          .onClick(async () => {
+          .onClick(() => {
             this.plugin.settings.paused = !this.plugin.settings.paused;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.updateActivity();
             this.display();
           });
       });
 
-    // Custom Client ID
+    // Custom client ID
     new Setting(containerEl)
-      .setName("Discord Client ID")
+      .setName("Discord client ID")
       .setDesc(
-        "Your Discord Application Client ID. Leave empty to use the default. " +
+        "Your Discord application client ID. Leave empty to use the default. " +
         "Create your own app at discord.com/developers/applications for custom images and branding."
       )
       .addText((text) =>
@@ -58,9 +56,9 @@ export class PresenceSettingTab extends PluginSettingTab {
               ? ""
               : this.plugin.settings.clientId
           )
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.clientId = value.trim() || DEFAULT_CLIENT_ID;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.reconnect();
           })
       );
@@ -70,9 +68,9 @@ export class PresenceSettingTab extends PluginSettingTab {
       .setName("Show vault name")
       .setDesc("Display your vault name in Discord status.")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showVaultName).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.showVaultName).onChange((value) => {
           this.plugin.settings.showVaultName = value;
-          await this.plugin.saveSettings();
+          void this.plugin.saveSettings();
           this.display();
           this.plugin.updateActivity();
         })
@@ -87,9 +85,9 @@ export class PresenceSettingTab extends PluginSettingTab {
           text
             .setPlaceholder(this.app.vault.getName())
             .setValue(this.plugin.settings.customVaultName)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.plugin.settings.customVaultName = value;
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
               this.plugin.updateActivity();
             })
         );
@@ -100,9 +98,9 @@ export class PresenceSettingTab extends PluginSettingTab {
       .setName("Show file name")
       .setDesc("Display the current file name in Discord status.")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showFileName).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.showFileName).onChange((value) => {
           this.plugin.settings.showFileName = value;
-          await this.plugin.saveSettings();
+          void this.plugin.saveSettings();
           this.display();
           this.plugin.updateActivity();
         })
@@ -114,9 +112,9 @@ export class PresenceSettingTab extends PluginSettingTab {
         .setName("Show file extension")
         .setDesc("Include the file extension (e.g. .md) in the file name.")
         .addToggle((toggle) =>
-          toggle.setValue(this.plugin.settings.showFileExtension).onChange(async (value) => {
+          toggle.setValue(this.plugin.settings.showFileExtension).onChange((value) => {
             this.plugin.settings.showFileExtension = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.updateActivity();
           })
         );
@@ -127,12 +125,12 @@ export class PresenceSettingTab extends PluginSettingTab {
       .setName("Per-file timer")
       .setDesc(
         "When on: timer resets each time you open a new file. " +
-        "When off: timer shows total time since Obsidian was opened."
+        "When off: timer shows total time since the plugin was loaded."
       )
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.usePerFileTimer).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.usePerFileTimer).onChange((value) => {
           this.plugin.settings.usePerFileTimer = value;
-          await this.plugin.saveSettings();
+          void this.plugin.saveSettings();
           this.plugin.updateActivity();
         })
       );
@@ -142,19 +140,20 @@ export class PresenceSettingTab extends PluginSettingTab {
       .setName("Show connection notices")
       .setDesc("Show a notice when Discord Rich Presence connects.")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showConnectionNotices).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.showConnectionNotices).onChange((value) => {
           this.plugin.settings.showConnectionNotices = value;
-          await this.plugin.saveSettings();
+          void this.plugin.saveSettings();
         })
       );
 
-    // ── Custom Status Format ───────────────────────────────────────────────
-    containerEl.createEl("h3", { text: "Custom Status Format" });
-    containerEl.createEl("p", {
-      text: "Override the text shown in Discord. Leave empty to use the default. " +
-        "Available placeholders: {file}, {fileNoExt}, {vault}, {mode}",
-      cls: "setting-item-description",
-    });
+    // ── Custom status format ───────────────────────────────────────────────
+    new Setting(containerEl)
+      .setName("Custom status format")
+      .setDesc(
+        "Override the text shown in Discord. Leave empty to use the default. " +
+        "Available placeholders: {file}, {fileNoExt}, {vault}, {mode}"
+      )
+      .setHeading();
 
     new Setting(containerEl)
       .setName("Details format")
@@ -163,9 +162,9 @@ export class PresenceSettingTab extends PluginSettingTab {
         text
           .setPlaceholder("Editing {fileNoExt}")
           .setValue(this.plugin.settings.customDetailsFormat)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.customDetailsFormat = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.updateActivity();
           })
       );
@@ -177,20 +176,21 @@ export class PresenceSettingTab extends PluginSettingTab {
         text
           .setPlaceholder("{mode} in {vault}")
           .setValue(this.plugin.settings.customStateFormat)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.customStateFormat = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.updateActivity();
           })
       );
 
-    // ── Exclusion List ─────────────────────────────────────────────────────
-    containerEl.createEl("h3", { text: "Exclusion List" });
-    containerEl.createEl("p", {
-      text: "Files or folders whose paths contain any of these patterns will be hidden from Discord (one pattern per line). " +
-        "Example: Privat/ or secret.md",
-      cls: "setting-item-description",
-    });
+    // ── Exclusion list ─────────────────────────────────────────────────────
+    new Setting(containerEl)
+      .setName("Exclusion list")
+      .setDesc(
+        "Files or folders whose paths contain any of these patterns will be hidden from Discord " +
+        "(one pattern per line, e.g. Privat/ or secret.md)."
+      )
+      .setHeading();
 
     new Setting(containerEl)
       .setName("Excluded patterns")
@@ -198,23 +198,25 @@ export class PresenceSettingTab extends PluginSettingTab {
         area
           .setPlaceholder("Privat/\nJournal/\nsecret.md")
           .setValue(this.plugin.settings.excludePatterns)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.excludePatterns = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.plugin.updateActivity();
           })
       );
 
-    // ── Idle Detection ─────────────────────────────────────────────────────
-    containerEl.createEl("h3", { text: "Idle Detection" });
+    // ── Idle detection ─────────────────────────────────────────────────────
+    new Setting(containerEl)
+      .setName("Idle detection")
+      .setHeading();
 
     new Setting(containerEl)
       .setName("Enable idle detection")
       .setDesc("Automatically change or clear your presence after a period of inactivity.")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.idleDetectionEnabled).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.idleDetectionEnabled).onChange((value) => {
           this.plugin.settings.idleDetectionEnabled = value;
-          await this.plugin.saveSettings();
+          void this.plugin.saveSettings();
           this.display();
         })
       );
@@ -227,11 +229,11 @@ export class PresenceSettingTab extends PluginSettingTab {
           text
             .setPlaceholder("10")
             .setValue(String(this.plugin.settings.idleTimeoutMinutes))
-            .onChange(async (value) => {
+            .onChange((value) => {
               const parsed = parseInt(value, 10);
               if (!isNaN(parsed) && parsed > 0) {
                 this.plugin.settings.idleTimeoutMinutes = parsed;
-                await this.plugin.saveSettings();
+                void this.plugin.saveSettings();
               }
             })
         );
@@ -244,19 +246,18 @@ export class PresenceSettingTab extends PluginSettingTab {
             .addOption("afk", "Show \"Away from keyboard\"")
             .addOption("clear", "Clear presence entirely")
             .setValue(this.plugin.settings.idleAction)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.plugin.settings.idleAction = value as "afk" | "clear";
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
             })
         );
     }
 
-    // ── Profile Buttons ────────────────────────────────────────────────────
-    containerEl.createEl("h3", { text: "Profile Buttons" });
-    containerEl.createEl("p", {
-      text: "Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button. URL must start with https://",
-      cls: "setting-item-description",
-    });
+    // ── Profile buttons ────────────────────────────────────────────────────
+    new Setting(containerEl)
+      .setName("Profile buttons")
+      .setDesc("Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button. URL must start with https://")
+      .setHeading();
 
     for (let i = 0; i < 2; i++) {
       const btn = this.plugin.settings.buttons[i];
@@ -266,11 +267,11 @@ export class PresenceSettingTab extends PluginSettingTab {
         .setDesc("Text shown on the button (max 32 characters).")
         .addText((text) =>
           text
-            .setPlaceholder(i === 0 ? "View Repository" : "My Website")
+            .setPlaceholder(i === 0 ? "View repository" : "My website")
             .setValue(btn.label)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.plugin.settings.buttons[i].label = value.slice(0, 32);
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
               this.plugin.updateActivity();
             })
         );
@@ -282,13 +283,13 @@ export class PresenceSettingTab extends PluginSettingTab {
           text
             .setPlaceholder("https://github.com/yourname/yourrepo")
             .setValue(btn.url)
-            .onChange(async (value) => {
+            .onChange((value) => {
               const trimmed = value.trim();
               if (trimmed && !trimmed.startsWith("https://")) {
                 new Notice("Button URL must start with https://");
               }
               this.plugin.settings.buttons[i].url = trimmed;
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
               this.plugin.updateActivity();
             })
         );

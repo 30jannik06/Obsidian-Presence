@@ -1,0 +1,15 @@
+.obsidian-presence-statusbar {
+  cursor: pointer;
+}
+
+.obsidian-presence-connected {
+  color: var(--color-green);
+}
+
+.obsidian-presence-disconnected {
+  color: var(--color-red);
+}
+
+.obsidian-presence-paused {
+  color: var(--color-yellow);
+}

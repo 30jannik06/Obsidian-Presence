@@ -39,18 +39,17 @@ export default class ObsidianPresencePlugin extends Plugin {
     // Status bar
     this.statusBarItem = this.addStatusBarItem();
     this.statusBarItem.addClass("obsidian-presence-statusbar");
-    this.statusBarItem.style.cursor = "pointer";
     this.setStatusBar(false);
     this.registerDomEvent(this.statusBarItem, "click", () => {
       if (this.settings.paused) {
         this.settings.paused = false;
-        this.saveSettings();
+        void this.saveSettings();
         this.setStatusBar(this.rpcManager.connected);
         this.updateActivity();
         this.settingsTab?.display();
       } else if (this.rpcManager.connected) {
         this.settings.paused = true;
-        this.saveSettings();
+        void this.saveSettings();
         this.setStatusBar(this.rpcManager.connected);
         this.rpcManager.clearActivity();
         this.settingsTab?.display();
@@ -103,10 +102,10 @@ export default class ObsidianPresencePlugin extends Plugin {
 
     this.addCommand({
       id: "toggle-pause",
-      name: "Toggle Presence Pause",
+      name: "Toggle presence pause",
       callback: () => {
         this.settings.paused = !this.settings.paused;
-        this.saveSettings();
+        void this.saveSettings();
         this.setStatusBar(this.rpcManager.connected);
         if (this.settings.paused) {
           this.rpcManager.clearActivity();
@@ -240,11 +239,11 @@ export default class ObsidianPresencePlugin extends Plugin {
     const dot = this.statusBarItem.createSpan();
     if (this.settings.paused) {
       dot.setText("⏸ Discord");
-      dot.style.color = "var(--color-yellow)";
+      dot.addClass("obsidian-presence-paused");
       dot.title = "Discord Presence is paused — click to resume";
     } else {
       dot.setText("⬤ Discord");
-      dot.style.color = connected ? "var(--color-green)" : "var(--color-red)";
+      dot.addClass(connected ? "obsidian-presence-connected" : "obsidian-presence-disconnected");
       dot.title = connected
         ? "Connected to Discord — click to pause"
         : "Not connected to Discord — click to reconnect";

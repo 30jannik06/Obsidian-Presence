@@ -38,14 +38,14 @@ export class RpcManager {
     client.login({ clientId: settings.clientId }).catch((err: Error) => {
       this._connected = false;
       this.onDisconnected();
-      console.debug("[obsidian-presence] Could not connect to Discord:", err.message);
+      console.debug("[discord-rpc] Could not connect to Discord:", err.message);
     });
   }
 
   destroy(): void {
     if (this.rpc) {
       try {
-        this.rpc.destroy();
+        void this.rpc.destroy();
       } catch {
         // ignore errors on destroy
       }
@@ -79,7 +79,7 @@ export class RpcManager {
         ...(activeButtons.length > 0 && { buttons: activeButtons }),
       } as Parameters<DiscordRPC.Client["setActivity"]>[0] & { buttons?: PresenceButton[] })
       .catch((err: Error) => {
-        console.debug("[obsidian-presence] setActivity error:", err.message);
+        console.debug("[discord-rpc] setActivity error:", err.message);
         this._connected = false;
         this.onDisconnected();
       });
@@ -88,7 +88,7 @@ export class RpcManager {
   clearActivity(): void {
     if (!this._connected || !this.rpc) return;
     this.rpc.clearActivity().catch((err: Error) => {
-      console.debug("[obsidian-presence] clearActivity error:", err.message);
+      console.debug("[discord-rpc] clearActivity error:", err.message);
     });
   }
 }
