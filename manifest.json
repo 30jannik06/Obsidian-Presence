@@ -1,10 +1,10 @@
 {
-  "id": "obsidian-presence",
-  "name": "Obsidian Presence",
-  "version": "1.3.0",
+  "id": "presence",
+  "name": "Presence",
+  "version": "1.3.1",
   "minAppVersion": "1.4.0",
-  "description": "Show your Obsidian activity on Discord via Rich Presence.",
-  "author": "",
-  "authorUrl": "",
+  "description": "Show your activity on Discord via Rich Presence.",
+  "author": "30jannik06",
+  "authorUrl": "https://github.com/30jannik06",
   "isDesktopOnly": true
 }
