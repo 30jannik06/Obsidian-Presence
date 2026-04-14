@@ -138,7 +138,7 @@ export class PresenceSettingTab extends PluginSettingTab {
     // Connection notices
     new Setting(containerEl)
       .setName("Show connection notices")
-      .setDesc("Show a notice when Discord Rich Presence connects.")
+      .setDesc("Show a notice when the plugin connects to Discord.")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.showConnectionNotices).onChange((value) => {
           this.plugin.settings.showConnectionNotices = value;
@@ -243,7 +243,7 @@ export class PresenceSettingTab extends PluginSettingTab {
         .setDesc("What to show on Discord when you are idle.")
         .addDropdown((drop) =>
           drop
-            .addOption("afk", "Show \"Away from keyboard\"")
+            .addOption("afk", "Away from keyboard")
             .addOption("clear", "Clear presence entirely")
             .setValue(this.plugin.settings.idleAction)
             .onChange((value) => {
@@ -256,7 +256,7 @@ export class PresenceSettingTab extends PluginSettingTab {
     // ── Profile buttons ────────────────────────────────────────────────────
     new Setting(containerEl)
       .setName("Profile buttons")
-      .setDesc("Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button. URL must start with https://")
+      .setDesc("Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button.")
       .setHeading();
 
     for (let i = 0; i < 2; i++) {
@@ -278,7 +278,7 @@ export class PresenceSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName(`Button ${i + 1} URL`)
-        .setDesc("Must start with https://")
+        .setDesc("Must start with https://. Leave empty to disable.")
         .addText((text) =>
           text
             .setPlaceholder("https://github.com/yourname/yourrepo")
@@ -286,7 +286,7 @@ export class PresenceSettingTab extends PluginSettingTab {
             .onChange((value) => {
               const trimmed = value.trim();
               if (trimmed && !trimmed.startsWith("https://")) {
-                new Notice("Button URL must start with https://");
+                new Notice("URL must start with https://");
               }
               this.plugin.settings.buttons[i].url = trimmed;
               void this.plugin.saveSettings();

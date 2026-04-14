@@ -26,7 +26,7 @@ export class RpcManager {
       this._connected = true;
       this.onConnected();
       if (settings.showConnectionNotices) {
-        new Notice("Discord Rich Presence connected.");
+        new Notice("Connected to Discord.");
       }
     });
 

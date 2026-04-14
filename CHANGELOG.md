@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.5 — 2026-04-14
+
+### Fixed
+- Sentence case in all UI strings (Obsidian marketplace compliance)
+
+---
+
 ## v1.3.0 — 2026-04-14
 
 ### Added
