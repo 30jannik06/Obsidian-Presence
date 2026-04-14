@@ -1,7 +1,7 @@
 {
   "id": "discord-rpc",
   "name": "Discord RPC",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "minAppVersion": "1.4.0",
   "description": "Show your activity on Discord via Rich Presence.",
   "author": "30jannik06",
