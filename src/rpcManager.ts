@@ -1,6 +1,6 @@
 import * as DiscordRPC from "discord-rpc";
 import { Notice } from "obsidian";
-import type { PresenceSettings } from "./types";
+import type { PresenceButton, PresenceSettings } from "./types";
 
 export class RpcManager {
   private rpc: DiscordRPC.Client | null = null;
@@ -30,6 +30,11 @@ export class RpcManager {
       }
     });
 
+    client.on("disconnected", () => {
+      this._connected = false;
+      this.onDisconnected();
+    });
+
     client.login({ clientId: settings.clientId }).catch((err: Error) => {
       this._connected = false;
       this.onDisconnected();
@@ -54,8 +59,11 @@ export class RpcManager {
     state: string,
     startTimestamp: number,
     mode: "source" | "preview",
+    buttons: PresenceButton[],
   ): void {
     if (!this._connected || !this.rpc) return;
+
+    const activeButtons = buttons.filter((b) => b.label.trim() && b.url.trim());
 
     this.rpc
       .setActivity({
@@ -66,7 +74,8 @@ export class RpcManager {
         largeImageText: "Obsidian",
         smallImageKey: mode === "preview" ? "reading" : "editing",
         smallImageText: mode === "preview" ? "Reading" : "Editing",
-      })
+        ...(activeButtons.length > 0 && { buttons: activeButtons }),
+      } as Parameters<DiscordRPC.Client["setActivity"]>[0] & { buttons?: PresenceButton[] })
       .catch((err: Error) => {
         console.debug("[obsidian-presence] setActivity error:", err.message);
         this._connected = false;

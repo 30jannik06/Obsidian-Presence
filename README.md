@@ -11,6 +11,9 @@ Show your Obsidian activity on Discord via Rich Presence.
 - Elapsed timer (total session or per-file)
 - Auto-reconnects if Discord is closed and reopened
 - Status bar indicator with click-to-reconnect
+- Reconnect button and live connection status in the settings tab
+- Command palette entry: **Reconnect to Discord**
+- Up to 2 custom profile buttons (e.g. "View Repository")
 - Custom Discord Application support (bring your own Client ID + images)
 - Configurable via settings tab
 
@@ -25,6 +28,18 @@ Show your Obsidian activity on Discord via Rich Presence.
 | Show file extension | Toggle `.md` extension in file name |
 | Per-file timer | Reset timer on each new file vs. total session time |
 | Show connection notices | Show notice on Discord connect |
+| Button 1 / 2 label | Text shown on the button (max 32 characters) |
+| Button 1 / 2 URL | Link opened when the button is clicked |
+
+## Profile Buttons
+
+You can add up to 2 clickable buttons to your Discord profile card — for example a link to your GitHub repository or website.
+
+1. Open Settings → Obsidian Presence → **Profile Buttons**
+2. Enter a label (e.g. `View Repository`) and a URL (e.g. `https://github.com/yourname/yourrepo`)
+3. Leave label or URL empty to disable a button
+
+> **Note:** Discord does not show your own buttons on your own profile. Ask someone else to check your profile to verify they appear.
 
 ## Custom Discord Application
 
@@ -66,6 +81,18 @@ pnpm run build # production build
 
 - Desktop only (Discord IPC is not available in mobile/web)
 - Discord must be running
+
+## Changelog
+
+### v1.2.0
+- Added live connection status indicator in the settings tab (🟢/🔴)
+- Added **Reconnect** button in the settings tab
+- Added **Reconnect to Discord** command palette entry
+- Added up to 2 configurable profile buttons with label and URL
+- Fixed: connection status now correctly updates when Discord closes unexpectedly
+
+### v1.1.0
+- Initial public release
 
 ---
 

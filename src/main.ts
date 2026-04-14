@@ -11,6 +11,7 @@ export default class ObsidianPresencePlugin extends Plugin {
   private currentFile: string | null = null;
   private currentMode: "source" | "preview" = "source";
   private statusBarItem!: HTMLElement;
+  settingsTab: PresenceSettingTab | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -22,8 +23,12 @@ export default class ObsidianPresencePlugin extends Plugin {
       () => {
         this.setStatusBar(true);
         this.updateActivity();
+        this.settingsTab?.display();
       },
-      () => this.setStatusBar(false),
+      () => {
+        this.setStatusBar(false);
+        this.settingsTab?.display();
+      },
     );
 
     // Status bar
@@ -60,7 +65,14 @@ export default class ObsidianPresencePlugin extends Plugin {
       })
     );
 
-    this.addSettingTab(new PresenceSettingTab(this.app, this));
+    this.settingsTab = new PresenceSettingTab(this.app, this);
+    this.addSettingTab(this.settingsTab);
+
+    this.addCommand({
+      id: "reconnect-discord",
+      name: "Reconnect to Discord",
+      callback: () => this.reconnect(),
+    });
 
     // Connect and auto-reconnect every 15s
     this.reconnect();
@@ -75,6 +87,10 @@ export default class ObsidianPresencePlugin extends Plugin {
 
   onunload() {
     this.rpcManager.destroy();
+  }
+
+  get connected(): boolean {
+    return this.rpcManager.connected;
   }
 
   reconnect(): void {
@@ -108,7 +124,7 @@ export default class ObsidianPresencePlugin extends Plugin {
       ? this.fileStartTime
       : this.pluginStartTime;
 
-    this.rpcManager.setActivity(details, state, startTimestamp, this.currentMode);
+    this.rpcManager.setActivity(details, state, startTimestamp, this.currentMode, this.settings.buttons);
   }
 
   private setStatusBar(connected: boolean): void {

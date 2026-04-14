@@ -1,5 +1,10 @@
 export const DEFAULT_CLIENT_ID = "1493243390911844574";
 
+export interface PresenceButton {
+  label: string;
+  url: string;
+}
+
 export interface PresenceSettings {
   clientId: string;
   showVaultName: boolean;
@@ -8,6 +13,7 @@ export interface PresenceSettings {
   usePerFileTimer: boolean;
   customVaultName: string;
   showConnectionNotices: boolean;
+  buttons: [PresenceButton, PresenceButton];
 }
 
 export const DEFAULT_SETTINGS: PresenceSettings = {
@@ -18,4 +24,8 @@ export const DEFAULT_SETTINGS: PresenceSettings = {
   usePerFileTimer: false,
   customVaultName: "",
   showConnectionNotices: true,
+  buttons: [
+    { label: "", url: "" },
+    { label: "", url: "" },
+  ],
 };

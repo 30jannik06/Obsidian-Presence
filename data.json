@@ -1,0 +1,19 @@
+{
+  "clientId": "1493243390911844574",
+  "showVaultName": true,
+  "showFileName": true,
+  "showFileExtension": true,
+  "usePerFileTimer": false,
+  "customVaultName": "",
+  "showConnectionNotices": true,
+  "buttons": [
+    {
+      "label": "View Repository",
+      "url": "https://github.com/30jannik06/Obsidian-Presence"
+    },
+    {
+      "label": "Join Discord",
+      "url": "https://dsc.gg/aftershock"
+    }
+  ]
+}

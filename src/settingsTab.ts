@@ -16,6 +16,20 @@ export class PresenceSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Obsidian Presence Settings" });
 
+    // Connection status + reconnect button
+    new Setting(containerEl)
+      .setName("Discord connection")
+      .setDesc(this.plugin.connected ? "🟢 Connected" : "🔴 Not connected")
+      .addButton((btn) =>
+        btn
+          .setButtonText("Reconnect")
+          .onClick(() => {
+            this.plugin.reconnect();
+            // Re-render after a short delay to let the connection state update
+            setTimeout(() => this.display(), 1500);
+          })
+      );
+
     // Custom Client ID
     new Setting(containerEl)
       .setName("Discord Client ID")
@@ -120,5 +134,44 @@ export class PresenceSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+
+    // Buttons
+    containerEl.createEl("h3", { text: "Profile Buttons" });
+    containerEl.createEl("p", {
+      text: "Up to 2 buttons shown on your Discord profile. Leave label or URL empty to disable a button.",
+      cls: "setting-item-description",
+    });
+
+    for (let i = 0; i < 2; i++) {
+      const btn = this.plugin.settings.buttons[i];
+
+      new Setting(containerEl)
+        .setName(`Button ${i + 1} label`)
+        .setDesc("Text shown on the button (max 32 characters).")
+        .addText((text) =>
+          text
+            .setPlaceholder(i === 0 ? "View Repository" : "My Website")
+            .setValue(btn.label)
+            .onChange(async (value) => {
+              this.plugin.settings.buttons[i].label = value.slice(0, 32);
+              await this.plugin.saveSettings();
+              this.plugin.updateActivity();
+            })
+        );
+
+      new Setting(containerEl)
+        .setName(`Button ${i + 1} URL`)
+        .setDesc("Link opened when the button is clicked. Must start with https://")
+        .addText((text) =>
+          text
+            .setPlaceholder("https://github.com/yourname/yourrepo")
+            .setValue(btn.url)
+            .onChange(async (value) => {
+              this.plugin.settings.buttons[i].url = value.trim();
+              await this.plugin.saveSettings();
+              this.plugin.updateActivity();
+            })
+        );
+    }
   }
 }
