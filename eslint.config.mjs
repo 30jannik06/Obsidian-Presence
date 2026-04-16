@@ -10,7 +10,7 @@ export default defineConfig([
       parser: tsparser,
     },
     rules: {
-      "obsidianmd/ui/sentence-case": ["warn", { acronyms: ["RPC", "URL"] }],
+      "obsidianmd/ui/sentence-case": ["warn", { acronyms: ["RPC", "URL", "ID"] }],
     },
   },
 ]);
