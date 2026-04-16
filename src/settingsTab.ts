@@ -278,7 +278,7 @@ export class PresenceSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName(`Button ${i + 1} URL`)
-        .setDesc("Must start with https://. Leave empty to disable.")
+        .setDesc("Must start with https://; leave empty to disable.")
         .addText((text) =>
           text
             .setPlaceholder("https://github.com/yourname/yourrepo")

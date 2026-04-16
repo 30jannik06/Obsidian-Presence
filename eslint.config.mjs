@@ -9,5 +9,8 @@ export default defineConfig([
     languageOptions: {
       parser: tsparser,
     },
+    rules: {
+      "obsidianmd/ui/sentence-case": ["warn", { acronyms: ["RPC", "URL"] }],
+    },
   },
 ]);
