@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.0 — 2026-05-15
+
+### Added
+- **Canvas support** — `.canvas` files are now tracked correctly; mode resets to "editing" when switching from a Markdown file to a Canvas
+- **`{folder}` placeholder** — shows the parent folder path of the current file in custom format strings (e.g. `Projects/Backend`)
+- **`{wordCount}` placeholder** — displays the live word count of the current file in custom format strings
+- **Swap image layout** setting — flip the Discord image positions: editing/reading icon as the large image, Obsidian logo as the small image
+- **Glob pattern support** in exclusion list — patterns like `Journal/**` and `*.canvas` now work correctly alongside plain-text patterns
+
+---
+
 ## v1.3.5 — 2026-04-14
 
 ### Fixed

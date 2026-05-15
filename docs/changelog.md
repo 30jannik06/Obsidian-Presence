@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] — 2026-05-15
+
+### Added
+- **Canvas support** — `.canvas` files are now tracked correctly; mode resets to "editing" when switching from a Markdown file to a Canvas
+- **`{folder}` placeholder** — shows the parent folder path of the current file in custom format strings (e.g. `Projects/Backend`)
+- **`{wordCount}` placeholder** — displays the live word count of the current file in custom format strings
+- **Swap image layout** setting — flip the Discord image positions: editing/reading icon as the large image, Obsidian logo as the small image
+- **Glob pattern support** in exclusion list — patterns like `Journal/**` and `*.canvas` now work correctly alongside plain-text patterns
+
+---
+
 ## [1.3.0] — 2026-04-14
 
 ### Added
@@ -71,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Status bar indicator (green/red) with click-to-reconnect
 - Settings tab with 6 configurable options
 
-[Unreleased]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/30jannik06/Obsidian-Presence/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/30jannik06/Obsidian-Presence/compare/1.3.5...1.4.0
 [1.3.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/30jannik06/Obsidian-Presence/compare/v1.0.0...v1.1.0
