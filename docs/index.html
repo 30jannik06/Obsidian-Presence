@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discord RPC — Obsidian Plugin</title>
+  <meta name="description" content="Show your Obsidian activity on Discord via Rich Presence — vault name, file, edit/reading mode and elapsed timer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d1117;
+      --bg-card:      #161b22;
+      --bg-code:      #1a2030;
+      --border:       #30363d;
+      --accent:       #5865f2;
+      --accent-light: #8891f5;
+      --text:         #e6edf3;
+      --text-muted:   #8b949e;
+      --green:        #3fb950;
+      --yellow:       #d29922;
+      --radius:       10px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo svg { color: var(--accent-light); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4752c4; text-decoration: none; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg-card); text-decoration: none; }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 100px 32px 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .hero-badge .dot-live { color: var(--green); }
+
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #8891f5, #5865f2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Discord card mock ── */
+    .demo {
+      max-width: 520px;
+      margin: 0 auto 80px;
+      padding: 0 32px;
+    }
+
+    .discord-card {
+      background: #1e1f22;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      border: 1px solid #2d2f33;
+    }
+
+    .discord-banner {
+      height: 60px;
+      background: linear-gradient(135deg, #5865f2, #3b44c1);
+    }
+
+    .discord-card-body {
+      padding: 0 16px 16px;
+    }
+
+    .discord-avatar-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin-top: -20px;
+      margin-bottom: 12px;
+    }
+
+    .discord-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 4px solid #1e1f22;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .discord-username {
+      font-weight: 700;
+      font-size: 1rem;
+      padding-bottom: 4px;
+    }
+
+    .discord-divider {
+      height: 1px;
+      background: #2d2f33;
+      margin: 12px 0;
+    }
+
+    .discord-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .discord-rpc-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .discord-rpc-img {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .discord-rpc-badge {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1e1f22;
+      border: 2px solid #1e1f22;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .discord-rpc-info { flex: 1; min-width: 0; }
+
+    .discord-rpc-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .discord-rpc-detail {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .discord-rpc-timer {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Sections ── */
+    section { max-width: 900px; margin: 0 auto; padding: 0 32px 80px; }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-light);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+    }
+
+    /* ── Feature cards ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover { border-color: var(--accent); }
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      background: rgba(88, 101, 242, 0.12);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      color: var(--accent-light);
+    }
+
+    .feature-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .new-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 10px;
+      background: rgba(88, 101, 242, 0.2);
+      color: var(--accent-light);
+      border: 1px solid rgba(88, 101, 242, 0.4);
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Config table ── */
+    .config-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .config-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .config-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .config-row:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+    .config-row:only-child  { border-radius: var(--radius); }
+
+    .config-key {
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--accent-light);
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+
+    .config-desc {
+      padding: 12px 16px;
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .config-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      background: var(--bg-code);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    .config-section-header {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 20px 0 8px;
+    }
+
+    /* ── Placeholders ── */
+    .placeholder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .placeholder-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .placeholder-card code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent-light);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .placeholder-card span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Custom app steps ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(88, 101, 242, 0.15);
+      border: 1px solid rgba(88, 101, 242, 0.4);
+      color: var(--accent-light);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .step-content p, .step-content li {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .step-content ul { padding-left: 16px; }
+
+    .step-content code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      background: var(--bg-code);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    .asset-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.87rem;
+    }
+
+    .asset-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .asset-table td {
+      padding: 10px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    }
+
+    .asset-table td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--accent-light);
+    }
+
+    .asset-table tr:last-child td { border-bottom: none; }
+
+    /* ── Install cards ── */
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 640px) { .install-grid { grid-template-columns: 1fr; } }
+
+    .install-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .install-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .tag-yellow {
+      background: rgba(210, 153, 34, 0.12);
+      color: var(--yellow);
+      border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .install-card ol, .install-card ul {
+      padding-left: 18px;
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .install-card code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      background: var(--bg-code);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+
+    .code-block .comment { color: #6a9955; }
+    .code-block .cmd     { color: var(--accent-light); }
+    .code-block .arg     { color: #ce9178; }
+
+    /* ── Callout ── */
+    .callout {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    .callout strong { color: var(--accent-light); }
+
+    /* ── Changelog ── */
+    .changelog { max-width: 760px; }
+
+    .changelog-release {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .changelog-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .changelog-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--accent-light);
+    }
+
+    .changelog-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .changelog-tag {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .changelog-body { padding: 16px 20px; }
+
+    .changelog-group { margin-bottom: 12px; }
+    .changelog-group:last-child { margin-bottom: 0; }
+
+    .changelog-group-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .changelog-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .changelog-items li {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+    }
+
+    .changelog-items li::before {
+      content: "·";
+      color: var(--accent-light);
+      flex-shrink: 0;
+    }
+
+    .changelog-items code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      background: var(--bg-code);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      nav { padding: 12px 16px; }
+      .nav-links { display: none; }
+      .hero { padding: 60px 16px 60px; }
+      section { padding-left: 16px; padding-right: 16px; }
+      .demo { padding: 0 16px; }
+      .config-row { grid-template-columns: 1fr; }
+      .config-key { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026 13.83 13.83 0 0 0 1.226-1.963.074.074 0 0 0-.041-.104 13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/></svg>
+    Discord RPC
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#configuration">Configuration</a></li>
+    <li><a href="#custom-app">Custom App</a></li>
+    <li><a href="#install">Installation</a></li>
+    <li><a href="#changelog">Changelog</a></li>
+    <li><a href="https://github.com/30jannik06/Obsidian-Presence">GitHub</a></li>
+  </ul>
+  <a class="btn btn-primary" href="obsidian://show-plugin?id=discord-rpc">
+    Install in Obsidian
+  </a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="dot-live">●</span> Obsidian Community Plugin &nbsp;·&nbsp; v1.4.0 &nbsp;·&nbsp; Free &amp; Open Source
+  </div>
+  <h1>Your Obsidian activity,<br />live on <em>Discord</em></h1>
+  <p class="hero-sub">
+    Vault name, file, edit/reading mode and an elapsed timer —
+    shown directly in your Discord profile via Rich Presence.
+  </p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="obsidian://show-plugin?id=discord-rpc">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install in Obsidian
+    </a>
+    <a class="btn btn-secondary" href="https://github.com/30jannik06/Obsidian-Presence">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+</div>
+
+<!-- Discord card mockup -->
+<div class="demo">
+  <div class="discord-card">
+    <div class="discord-banner"></div>
+    <div class="discord-card-body">
+      <div class="discord-avatar-row">
+        <div class="discord-avatar">🦅</div>
+        <div class="discord-username">30jannik06</div>
+      </div>
+      <div class="discord-divider"></div>
+      <div class="discord-section-label">Playing a game</div>
+      <div class="discord-rpc-row">
+        <div class="discord-rpc-img">
+          📓
+          <div class="discord-rpc-badge">✏️</div>
+        </div>
+        <div class="discord-rpc-info">
+          <div class="discord-rpc-name">Discord RPC</div>
+          <div class="discord-rpc-detail">main.ts</div>
+          <div class="discord-rpc-detail">Editing in MyVault</div>
+          <div class="discord-rpc-timer">01:23:45 elapsed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<section id="features">
+  <p class="section-label">Features</p>
+  <h2>Everything shown, nothing hidden</h2>
+  <div class="features">
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <h3>Vault &amp; file tracking</h3>
+      <p>Shows your vault name, current file and file extension in Discord — all individually toggleable.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <h3>Edit / Reading mode</h3>
+      <p>Detects whether you're writing or reading — shown as a small icon and in the status text.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3>Canvas support <span class="new-badge">1.4.0</span></h3>
+      <p>Canvas files are tracked correctly — no more stale presence from the last Markdown file when you switch.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </div>
+      <h3>Custom format strings <span class="new-badge">1.4.0</span></h3>
+      <p>Build your own Details and State lines with placeholders: <code>{file}</code>, <code>{folder}</code>, <code>{vault}</code>, <code>{mode}</code>, <code>{wordCount}</code> and more.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h3>Elapsed timer</h3>
+      <p>Track total session time or reset per file. Switch any time — no restart required.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      </div>
+      <h3>Pause &amp; idle detection</h3>
+      <p>Pause presence with one click. Idle detection clears or shows AFK after a configurable timeout.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+      </div>
+      <h3>Exclusion list <span class="new-badge">1.4.0</span></h3>
+      <p>Hide private files or folders from Discord. Supports plain text and glob patterns like <code>Journal/**</code> or <code>*.canvas</code>.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <h3>Profile buttons</h3>
+      <p>Add up to 2 clickable buttons to your Discord profile card — link to your GitHub, website or portfolio.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </div>
+      <h3>Auto-reconnect</h3>
+      <p>Reconnects automatically every 15 seconds if Discord restarts. Status bar shows connection state at a glance.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Configuration -->
+<section id="configuration">
+  <p class="section-label">Configuration</p>
+  <h2>All settings at a glance</h2>
+
+  <div class="config-section-header">General</div>
+  <div class="config-grid">
+    <div class="config-row">
+      <div class="config-key">Discord client ID</div>
+      <div class="config-desc">Your own Discord Application ID. Leave empty to use the built-in default (Obsidian logo). See <a href="#custom-app">Custom App</a> to set up your own.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Show vault name</div>
+      <div class="config-desc">Display your vault name in the Discord status. When on: <code>Editing in MyVault</code>. When off: <code>Editing</code>.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Custom vault name</div>
+      <div class="config-desc">Override the vault name shown in Discord. Leave empty to use the real vault folder name.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Show file name</div>
+      <div class="config-desc">Display the currently open file name. When off: <code>Editing a file</code> is shown instead.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Show file extension</div>
+      <div class="config-desc">Include the extension in the file name. <code>My Note.md</code> vs <code>My Note</code>. Only visible when file name is enabled.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Per-file timer</div>
+      <div class="config-desc">When on: timer resets each time you open a new file. When off: timer counts from plugin load.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Show connection notices</div>
+      <div class="config-desc">Show an Obsidian pop-up notice when the plugin successfully connects to Discord.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Swap image layout</div>
+      <div class="config-desc">Flip image positions: editing/reading icon becomes the large image, Obsidian logo becomes the small icon.</div>
+    </div>
+  </div>
+
+  <div class="config-section-header">Custom status format</div>
+  <p style="font-size:0.87rem;color:var(--text-muted);margin-bottom:16px;">
+    Override the two lines shown in Discord using placeholders. Leave empty to use the default display.
+  </p>
+  <div class="config-grid">
+    <div class="config-row">
+      <div class="config-key">Details format</div>
+      <div class="config-desc">Top line — e.g. <code>Editing {fileNoExt}</code></div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">State format</div>
+      <div class="config-desc">Bottom line — e.g. <code>{mode} in {vault} ({wordCount} words)</code></div>
+    </div>
+  </div>
+
+  <div class="placeholder-grid">
+    <div class="placeholder-card"><code>{file}</code><span>Full file name incl. extension</span></div>
+    <div class="placeholder-card"><code>{fileNoExt}</code><span>File name without extension</span></div>
+    <div class="placeholder-card"><code>{folder}</code><span>Parent folder path</span></div>
+    <div class="placeholder-card"><code>{vault}</code><span>Vault name</span></div>
+    <div class="placeholder-card"><code>{mode}</code><span>Editing or Reading</span></div>
+    <div class="placeholder-card"><code>{wordCount}</code><span>Live word count</span></div>
+  </div>
+
+  <div class="config-section-header">Exclusion list</div>
+  <div class="config-grid">
+    <div class="config-row">
+      <div class="config-key">Excluded patterns</div>
+      <div class="config-desc">
+        One pattern per line. Files/folders matching any pattern are hidden from Discord.
+        Supports plain text (<code>Privat/</code>) and glob syntax (<code>Journal/**</code>, <code>*.canvas</code>).
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section-header">Idle detection</div>
+  <div class="config-grid">
+    <div class="config-row">
+      <div class="config-key">Enable idle detection</div>
+      <div class="config-desc">Automatically change or clear presence after a period of inactivity.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Idle timeout</div>
+      <div class="config-desc">Minutes of inactivity before the idle action is triggered. Default: 10 minutes.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">When idle</div>
+      <div class="config-desc"><code>Away from keyboard</code> — shows an AFK status. <code>Clear presence</code> — removes it entirely.</div>
+    </div>
+  </div>
+
+  <div class="config-section-header">Profile buttons</div>
+  <div class="config-grid">
+    <div class="config-row">
+      <div class="config-key">Button label</div>
+      <div class="config-desc">Text shown on the button in Discord (max 32 characters). Leave empty to disable.</div>
+    </div>
+    <div class="config-row">
+      <div class="config-key">Button URL</div>
+      <div class="config-desc">Must start with <code>https://</code>. Leave empty to disable. Up to 2 buttons supported.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Custom App -->
+<section id="custom-app">
+  <p class="section-label">Custom Discord App</p>
+  <h2>Your own branding in Discord</h2>
+  <p style="font-size:0.87rem;color:var(--text-muted);margin-bottom:32px;">
+    By default the plugin uses a shared application with the Obsidian logo.
+    Set up your own Discord Application to use custom images and your own app name.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Create a Discord Application</h4>
+        <p>Go to <a href="https://discord.com/developers/applications">discord.com/developers/applications</a>, click <strong>New Application</strong> and give it a name. This name appears in Discord as <em>"Playing [name]"</em>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Upload your assets</h4>
+        <p>In your application go to <strong>Rich Presence → Art Assets</strong> and upload PNG images (min. 512 × 512 px) with exactly these key names:</p>
+        <table class="asset-table">
+          <thead>
+            <tr><th>Key</th><th>Used for</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>obsidian</td><td>Main large image</td></tr>
+            <tr><td>editing</td><td>Small icon in Edit mode</td></tr>
+            <tr><td>reading</td><td>Small icon in Preview/Reading mode</td></tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top:12px;">
+          <strong>Note:</strong> After uploading, click <strong>Save Changes</strong> and wait a few minutes for the assets to propagate.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Copy your Client ID</h4>
+        <p>Go to <strong>OAuth2</strong> (or the main page of your application) and copy the <strong>Application ID</strong>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Enter it in Obsidian</h4>
+        <p>Open <strong>Settings → Community Plugins → Discord RPC</strong> and paste your Client ID. The plugin reconnects automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Installation -->
+<section id="install">
+  <p class="section-label">Installation</p>
+  <h2>Get started in seconds</h2>
+  <div class="install-grid">
+    <div class="install-card">
+      <h3>Community Store <span class="tag">Recommended</span></h3>
+      <ol>
+        <li>Open Obsidian → <strong>Settings → Community Plugins</strong></li>
+        <li>Click <strong>Browse</strong> and search for <code>Discord RPC</code></li>
+        <li>Click <strong>Install</strong>, then <strong>Enable</strong></li>
+        <li>Make sure Discord is running — the status bar turns green</li>
+      </ol>
+    </div>
+    <div class="install-card">
+      <h3>Manual <span class="tag tag-yellow">Advanced</span></h3>
+      <ol>
+        <li>Download <code>main.js</code>, <code>manifest.json</code>, <code>styles.css</code> from the <a href="https://github.com/30jannik06/Obsidian-Presence/releases/latest">latest release</a></li>
+        <li>Copy to <code>.obsidian/plugins/discord-rpc/</code> in your vault</li>
+        <li>Enable <strong>Discord RPC</strong> in Settings → Community Plugins</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:16px;">
+    <strong>Requirements:</strong> Obsidian 1.4.0 or higher · Desktop only (Discord IPC is not available on mobile) · Discord must be running locally
+  </div>
+
+  <div class="code-block">
+    <div><span class="comment"># Clone and build from source</span></div>
+    <div><span class="cmd">git clone</span> <span class="arg">https://github.com/30jannik06/Obsidian-Presence</span></div>
+    <div><span class="cmd">cd</span> Obsidian-Presence &amp;&amp; <span class="cmd">pnpm install</span></div>
+    <br/>
+    <div><span class="cmd">pnpm dev</span>           <span class="comment"># watch mode</span></div>
+    <div><span class="cmd">pnpm build</span>         <span class="comment"># production build</span></div>
+    <div><span class="cmd">pnpm lint</span>          <span class="comment"># ESLint check</span></div>
+    <div><span class="cmd">pnpm format</span>        <span class="comment"># Prettier format</span></div>
+  </div>
+</section>
+
+<!-- Changelog -->
+<section id="changelog" class="changelog">
+  <p class="section-label">Changelog</p>
+  <h2>What's new</h2>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.4.0</span>
+      <span class="changelog-date">2026-05-15</span>
+      <span class="changelog-tag">Latest</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Canvas file support — <code>.canvas</code> files tracked correctly, no more stale presence on view switch</li>
+          <li>New placeholder <code>{folder}</code> — parent folder path of the current file</li>
+          <li>New placeholder <code>{wordCount}</code> — live word count of the current file</li>
+          <li>Swap image layout setting — flip editing/reading icon and Obsidian logo positions</li>
+          <li>Glob pattern support in exclusion list — <code>Journal/**</code> and <code>*.canvas</code> now work correctly</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.3.5</span>
+      <span class="changelog-date">2026-04-16</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Sentence case in all UI strings (Obsidian marketplace compliance)</li>
+          <li>ESLint sentence-case allowlist extended for acronyms</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.3.0</span>
+      <span class="changelog-date">2026-04-14</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Pause mode — status bar click, settings button, or command palette</li>
+          <li>Idle detection — show AFK or clear presence after configurable timeout</li>
+          <li>Exclusion list — hide files or folders from Discord by pattern</li>
+          <li>Custom status format — <code>{file}</code>, <code>{fileNoExt}</code>, <code>{vault}</code>, <code>{mode}</code> placeholders</li>
+        </ul>
+      </div>
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Reconnect button disables itself for 5 seconds to prevent spam</li>
+          <li>Button URLs validated — must start with <code>https://</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.2.0</span>
+      <span class="changelog-date">2026-04-14</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Live connection status in settings tab — updates automatically</li>
+          <li>Reconnect button in settings</li>
+          <li>Reconnect to Discord command palette entry</li>
+          <li>Up to 2 configurable profile buttons (label + URL)</li>
+        </ul>
+      </div>
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Connection status flag now resets correctly when Discord closes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.1.0</span>
+      <span class="changelog-date">2026-04-13</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Custom Discord Client ID — bring your own application with custom images</li>
+          <li>Small editing / reading icon for custom apps</li>
+          <li>GitHub Pages documentation site</li>
+          <li>Automated release workflow via GitHub Actions</li>
+        </ul>
+      </div>
+      <div class="changelog-group">
+        <div class="changelog-group-label">Changed</div>
+        <ul class="changelog-items">
+          <li>Refactored into focused modules: <code>types.ts</code>, <code>rpcManager.ts</code>, <code>settingsTab.ts</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">1.0.0</span>
+      <span class="changelog-date">2026-04-13</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Discord Rich Presence showing vault name, file name and edit/preview mode</li>
+          <li>Elapsed timer — total session or per-file</li>
+          <li>Auto-reconnect every 15 seconds</li>
+          <li>Status bar indicator (green/red) with click-to-reconnect</li>
+          <li>Settings tab with configurable options</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <p>
+    Discord RPC is open source under the <a href="https://github.com/30jannik06/Obsidian-Presence/blob/main/LICENSE">MIT License</a> ·
+    Built by <a href="https://github.com/30jannik06">30jannik06</a> ·
+    <a href="https://github.com/30jannik06/Obsidian-Presence">GitHub</a>
+  </p>
+</footer>
+
+</body>
+</html>
