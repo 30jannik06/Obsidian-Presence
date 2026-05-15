@@ -145,12 +145,27 @@ export class PresenceSettingTab extends PluginSettingTab {
 				})
 			);
 
+		// Swap images
+		new Setting(containerEl)
+			.setName("Swap image layout")
+			.setDesc(
+				"When on: editing/reading icon is the large image and the Obsidian logo is the small image. " +
+					"When off (default): Obsidian logo is large, editing/reading icon is small."
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.swapImages).onChange((value) => {
+					this.plugin.settings.swapImages = value;
+					void this.plugin.saveSettings();
+					this.plugin.updateActivity();
+				})
+			);
+
 		// ── Custom status format ───────────────────────────────────────────────
 		new Setting(containerEl)
 			.setName("Custom status format")
 			.setDesc(
 				"Override the text shown in Discord. Leave empty to use the default. " +
-					"Available placeholders: {file}, {fileNoExt}, {vault}, {mode}"
+					"Available placeholders: {file}, {fileNoExt}, {folder}, {vault}, {mode}, {wordCount}"
 			)
 			.setHeading();
 
@@ -186,8 +201,8 @@ export class PresenceSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Exclusion list")
 			.setDesc(
-				"Files or folders whose paths contain any of these patterns will be hidden from Discord " +
-					"(one pattern per line, e.g. Privat/ or secret.md)."
+				"Files or folders matching any of these patterns will be hidden from Discord " +
+					"(one pattern per line). Supports plain text (Privat/) and glob patterns (Journal/**, *.canvas)."
 			)
 			.setHeading();
 

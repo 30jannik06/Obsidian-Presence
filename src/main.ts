@@ -11,6 +11,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 	private currentFile: string | null = null;
 	private currentFilePath: string | null = null;
 	private currentMode: "source" | "preview" = "source";
+	private currentFileType: "md" | "canvas" | "other" = "md";
 	private statusBarItem!: HTMLElement;
 	private lastInteractionTime = 0;
 	private lastReconnectAttempt = 0;
@@ -58,11 +59,20 @@ export default class ObsidianPresencePlugin extends Plugin {
 			}
 		});
 
-		// Track file opens
+		// Track file opens (including .canvas files)
 		this.registerEvent(
 			this.app.workspace.on("file-open", (file) => {
 				this.currentFile = file?.name ?? null;
 				this.currentFilePath = file?.path ?? null;
+				this.currentFileType =
+					file?.extension === "canvas"
+						? "canvas"
+						: file?.extension === "md"
+							? "md"
+							: "other";
+				if (this.currentFileType !== "md") {
+					this.currentMode = "source";
+				}
 				this.lastInteractionTime = Date.now();
 				if (this.settings.usePerFileTimer) {
 					this.fileStartTime = Date.now();
@@ -211,8 +221,19 @@ export default class ObsidianPresencePlugin extends Plugin {
 			state,
 			startTimestamp,
 			this.currentMode,
-			this.settings.buttons
+			this.settings.buttons,
+			this.settings.swapImages
 		);
+	}
+
+	private globToRegex(pattern: string): RegExp {
+		const reStr = pattern
+			.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+			.replace(/\*\*/g, "\x00")
+			.replace(/\*/g, "[^/]*")
+			.replace(/\x00/g, ".*")
+			.replace(/\?/g, "[^/]");
+		return new RegExp(reStr);
 	}
 
 	private isExcluded(filePath: string | null): boolean {
@@ -221,7 +242,9 @@ export default class ObsidianPresencePlugin extends Plugin {
 			.split("\n")
 			.map((p) => p.trim())
 			.filter(Boolean);
-		return patterns.some((p) => filePath.includes(p));
+		return patterns.some((p) =>
+			p.includes("*") || p.includes("?") ? this.globToRegex(p).test(filePath) : filePath.includes(p)
+		);
 	}
 
 	private applyFormat(template: string): string {
@@ -230,12 +253,22 @@ export default class ObsidianPresencePlugin extends Plugin {
 		const fileName = this.currentFile ?? "";
 		const dotIndex = fileName.lastIndexOf(".");
 		const fileNoExt = dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+		const folder =
+			this.currentFilePath && this.currentFilePath.includes("/")
+				? this.currentFilePath.substring(0, this.currentFilePath.lastIndexOf("/"))
+				: "";
+
+		const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+		const content = editor?.getValue() ?? "";
+		const wordCount = String(content.trim() ? content.trim().split(/\s+/).length : 0);
 
 		return template
 			.replace(/{file}/g, fileName)
 			.replace(/{fileNoExt}/g, fileNoExt)
 			.replace(/{vault}/g, vaultName)
-			.replace(/{mode}/g, modeLabel);
+			.replace(/{mode}/g, modeLabel)
+			.replace(/{folder}/g, folder)
+			.replace(/{wordCount}/g, wordCount);
 	}
 
 	private setStatusBar(connected: boolean): void {

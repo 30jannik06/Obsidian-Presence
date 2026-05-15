@@ -59,21 +59,28 @@ export class RpcManager {
 		state: string,
 		startTimestamp: number,
 		mode: "source" | "preview",
-		buttons: PresenceButton[]
+		buttons: PresenceButton[],
+		swapImages = false
 	): void {
 		if (!this._connected || !this.rpc) return;
 
 		const activeButtons = buttons.filter((b) => b.label.trim() && b.url.startsWith("https://"));
+		const modeKey = mode === "preview" ? "reading" : "editing";
+		const modeText = mode === "preview" ? "Reading" : "Editing";
+		const largeImageKey = swapImages ? modeKey : "obsidian";
+		const largeImageText = swapImages ? modeText : "Obsidian";
+		const smallImageKey = swapImages ? "obsidian" : modeKey;
+		const smallImageText = swapImages ? "Obsidian" : modeText;
 
 		this.rpc
 			.setActivity({
 				details,
 				state,
 				startTimestamp,
-				largeImageKey: "obsidian",
-				largeImageText: "Obsidian",
-				smallImageKey: mode === "preview" ? "reading" : "editing",
-				smallImageText: mode === "preview" ? "Reading" : "Editing",
+				largeImageKey,
+				largeImageText,
+				smallImageKey,
+				smallImageText,
 				...(activeButtons.length > 0 && { buttons: activeButtons }),
 			} as Parameters<DiscordRPC.Client["setActivity"]>[0] & { buttons?: PresenceButton[] })
 			.catch((err: Error) => {

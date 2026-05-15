@@ -13,6 +13,7 @@ export interface PresenceSettings {
 	usePerFileTimer: boolean;
 	customVaultName: string;
 	showConnectionNotices: boolean;
+	swapImages: boolean;
 	buttons: [PresenceButton, PresenceButton];
 	paused: boolean;
 	idleDetectionEnabled: boolean;
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: PresenceSettings = {
 	usePerFileTimer: false,
 	customVaultName: "",
 	showConnectionNotices: true,
+	swapImages: false,
 	buttons: [
 		{ label: "", url: "" },
 		{ label: "", url: "" },
