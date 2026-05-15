@@ -201,7 +201,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 		} else if (this.currentFile) {
 			details = "Editing a file";
 		} else {
-			details = "No file open";
+			details = settings.noFileText || "No file open";
 		}
 
 		let state: string;
@@ -261,6 +261,12 @@ export default class ObsidianPresencePlugin extends Plugin {
 		const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
 		const content = editor?.getValue() ?? "";
 		const wordCount = String(content.trim() ? content.trim().split(/\s+/).length : 0);
+		const lineCount = String(content ? content.split("\n").length : 0);
+
+		const activeFile = this.app.workspace.getActiveFile();
+		const frontmatter = activeFile
+			? (this.app.metadataCache.getFileCache(activeFile)?.frontmatter ?? {})
+			: {};
 
 		return template
 			.replace(/{file}/g, fileName)
@@ -268,7 +274,9 @@ export default class ObsidianPresencePlugin extends Plugin {
 			.replace(/{vault}/g, vaultName)
 			.replace(/{mode}/g, modeLabel)
 			.replace(/{folder}/g, folder)
-			.replace(/{wordCount}/g, wordCount);
+			.replace(/{wordCount}/g, wordCount)
+			.replace(/{lineCount}/g, lineCount)
+			.replace(/{meta:(\w+)}/g, (_, key) => String(frontmatter[key] ?? ""));
 	}
 
 	private setStatusBar(connected: boolean): void {

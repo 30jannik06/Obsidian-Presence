@@ -20,6 +20,7 @@ export interface PresenceSettings {
 	idleTimeoutMinutes: number;
 	idleAction: "afk" | "clear";
 	excludePatterns: string;
+	noFileText: string;
 	customDetailsFormat: string;
 	customStateFormat: string;
 }
@@ -42,6 +43,7 @@ export const DEFAULT_SETTINGS: PresenceSettings = {
 	idleTimeoutMinutes: 10,
 	idleAction: "afk",
 	excludePatterns: "",
+	noFileText: "No file open",
 	customDetailsFormat: "",
 	customStateFormat: "",
 };

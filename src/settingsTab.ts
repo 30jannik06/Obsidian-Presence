@@ -160,12 +160,27 @@ export class PresenceSettingTab extends PluginSettingTab {
 				})
 			);
 
+		// No-file text
+		new Setting(containerEl)
+			.setName("No file open text")
+			.setDesc('Text shown in Discord when no file is active. Default: "No file open".')
+			.addText((text) =>
+				text
+					.setPlaceholder("No file open")
+					.setValue(this.plugin.settings.noFileText)
+					.onChange((value) => {
+						this.plugin.settings.noFileText = value;
+						void this.plugin.saveSettings();
+						this.plugin.updateActivity();
+					})
+			);
+
 		// ── Custom status format ───────────────────────────────────────────────
 		new Setting(containerEl)
 			.setName("Custom status format")
 			.setDesc(
 				"Override the text shown in Discord. Leave empty to use the default. " +
-					"Available placeholders: {file}, {fileNoExt}, {folder}, {vault}, {mode}, {wordCount}"
+					"Placeholders: {file}, {fileNoExt}, {folder}, {vault}, {mode}, {wordCount}, {lineCount}, {meta:key}"
 			)
 			.setHeading();
 
