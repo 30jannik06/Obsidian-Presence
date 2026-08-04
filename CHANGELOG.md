@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.1 — 2026-08-04
+
+### Fixed
+- Resolved Dependabot alerts by pinning transitive `ws`, `brace-expansion`, and `js-yaml` to patched versions (DoS advisories)
+- Release workflow now attaches `styles.css` alongside `main.js` and `manifest.json`
+
+### Changed
+- Updated dev dependencies: `esbuild`, `prettier`, `typescript`, `typescript-eslint`, `obsidian` types
+
+---
+
 ## v1.4.0 — 2026-05-15
 
 ### Added
