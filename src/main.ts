@@ -243,7 +243,9 @@ export default class ObsidianPresencePlugin extends Plugin {
 			.map((p) => p.trim())
 			.filter(Boolean);
 		return patterns.some((p) =>
-			p.includes("*") || p.includes("?") ? this.globToRegex(p).test(filePath) : filePath.includes(p)
+			p.includes("*") || p.includes("?")
+				? this.globToRegex(p).test(filePath)
+				: filePath.includes(p)
 		);
 	}
 
