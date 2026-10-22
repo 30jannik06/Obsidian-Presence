@@ -293,7 +293,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 		if (this.settings.paused) {
 			dot.setText("⏸ Discord");
 			dot.addClass("obsidian-presence-paused");
-			dot.title = "Discord RPC is paused — click to resume";
+			dot.title = "Presence paused — click to resume";
 		} else {
 			dot.setText("⬤ Discord");
 			dot.addClass(

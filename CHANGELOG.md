@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.1 — 2026-10-22
+
+### Fixed
+- Settings tab no longer references Obsidian 1.13 APIs directly; they are detected at runtime so the declared `minAppVersion` (1.4.0) stays valid
+- Removed lint suppression comment flagged by the Obsidian review
+- Sentence-case status bar tooltip
+
+---
+
 ## v1.5.0 — 2026-10-22
 
 ### Changed

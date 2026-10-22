@@ -114,6 +114,9 @@ pnpm format       # Prettier format
 
 ## Changelog
 
+### v1.5.1
+- Compatibility and review fixes for the new settings tab
+
 ### v1.5.0
 - Own lightweight Discord IPC client replaces `discord-rpc` (no filesystem access, ~19 KB bundle)
 - Settings are searchable in Obsidian 1.13+

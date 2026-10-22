@@ -14,6 +14,12 @@ const SILENT_KEYS = new Set(["showConnectionNotices", "idleDetectionEnabled", "i
 const PLACEHOLDERS =
 	"Placeholders: {file}, {fileNoExt}, {folder}, {vault}, {mode}, {wordCount}, {lineCount}, {meta:key}";
 
+/** Members that only exist on Obsidian >= 1.13, detected at runtime. */
+interface ModernSettingTab {
+	update?: () => void;
+	refreshDomState?: () => void;
+}
+
 function isShown(visible: Visibility): boolean {
 	return typeof visible === "function" ? visible() : (visible ?? true);
 }
@@ -250,11 +256,11 @@ export class PresenceSettingTab extends PluginSettingTab {
 
 	/** Re-renders the tab after external state (connection, pause) changed. */
 	refresh(): void {
-		if (typeof this.update === "function") {
-			this.update();
+		const modern = this as unknown as ModernSettingTab;
+		if (modern.update) {
+			modern.update();
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- fallback for Obsidian < 1.13
-			this.display();
+			this.renderLegacy();
 		}
 	}
 
@@ -268,12 +274,17 @@ export class PresenceSettingTab extends PluginSettingTab {
 	}
 
 	private refreshView(): void {
-		if (typeof this.refreshDomState === "function") {
-			this.refreshDomState();
+		const modern = this as unknown as ModernSettingTab;
+		if (modern.refreshDomState) {
+			modern.refreshDomState();
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- fallback for Obsidian < 1.13
-			this.display();
+			this.renderLegacy();
 		}
+	}
+
+	/** Only used on Obsidian < 1.13, where the declarative settings API is unavailable. */
+	private renderLegacy(): void {
+		this.display();
 	}
 
 	private renderConnection(setting: Setting): void {
