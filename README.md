@@ -114,6 +114,15 @@ pnpm format       # Prettier format
 
 ## Changelog
 
+### v1.5.0
+- Own lightweight Discord IPC client replaces `discord-rpc` (no filesystem access, ~19 KB bundle)
+- Settings are searchable in Obsidian 1.13+
+- Pause button in settings now updates the status bar
+- Release notes and build attestations
+
+### v1.4.1
+- Dependency security updates
+
 ### v1.4.0
 - Canvas file support — `.canvas` files tracked correctly
 - New placeholders: `{folder}`, `{wordCount}`, `{lineCount}`, `{meta:key}`

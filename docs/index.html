@@ -739,7 +739,7 @@
 <!-- Hero -->
 <div class="hero">
   <div class="hero-badge">
-    <span class="dot-live">●</span> Obsidian Community Plugin &nbsp;·&nbsp; v1.4.1 &nbsp;·&nbsp; Free &amp; Open Source
+    <span class="dot-live">●</span> Obsidian Community Plugin &nbsp;·&nbsp; v1.5.0 &nbsp;·&nbsp; Free &amp; Open Source
   </div>
   <h1>Your Obsidian activity,<br />live on <em>Discord</em></h1>
   <p class="hero-sub">
@@ -1081,9 +1081,33 @@
 
   <div class="changelog-release">
     <div class="changelog-header">
+      <span class="changelog-version">1.5.0</span>
+      <span class="changelog-date">2026-10-22</span>
+      <span class="changelog-tag">Latest</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Changed</div>
+        <ul class="changelog-items">
+          <li>Own lightweight Discord IPC client replaces the unmaintained <code>discord-rpc</code> library — no filesystem access, bundle shrinks from ~380 KB to ~19 KB</li>
+          <li>Settings are searchable in Obsidian 1.13+ (declarative settings API)</li>
+          <li>Button URLs are validated before saving</li>
+        </ul>
+      </div>
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Pause button in settings now updates the status bar</li>
+          <li>Timers use <code>window.setTimeout</code> for popout window compatibility</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
       <span class="changelog-version">1.4.1</span>
       <span class="changelog-date">2026-08-04</span>
-      <span class="changelog-tag">Latest</span>
     </div>
     <div class="changelog-body">
       <div class="changelog-group">

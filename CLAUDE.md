@@ -30,4 +30,4 @@ Knowledge Graph — nach jeder Session:
 /graphify . dann Output nach C:\Users\j.sommer\Documents\github\ClaudeBrain\01_Projekte\Privat\Obsidian-Presence\Graphify\ kopieren ohne .obsidian Ordner
 
 ## Stack
-TypeScript 5.x, Obsidian Plugin API (≥ 1.4.0), discord-rpc 4.x, esbuild, pnpm 10.x
+TypeScript 5.x, Obsidian Plugin API (≥ 1.4.0), esbuild (own Discord IPC client, no runtime deps), pnpm 10.x

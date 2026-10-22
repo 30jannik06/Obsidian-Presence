@@ -29,11 +29,11 @@ export default class ObsidianPresencePlugin extends Plugin {
 			() => {
 				this.setStatusBar(true);
 				this.updateActivity();
-				this.settingsTab?.display();
+				this.settingsTab?.refresh();
 			},
 			() => {
 				this.setStatusBar(false);
-				this.settingsTab?.display();
+				this.settingsTab?.refresh();
 			}
 		);
 
@@ -43,17 +43,9 @@ export default class ObsidianPresencePlugin extends Plugin {
 		this.setStatusBar(false);
 		this.registerDomEvent(this.statusBarItem, "click", () => {
 			if (this.settings.paused) {
-				this.settings.paused = false;
-				void this.saveSettings();
-				this.setStatusBar(this.rpcManager.connected);
-				this.updateActivity();
-				this.settingsTab?.display();
+				this.setPaused(false);
 			} else if (this.rpcManager.connected) {
-				this.settings.paused = true;
-				void this.saveSettings();
-				this.setStatusBar(this.rpcManager.connected);
-				this.rpcManager.clearActivity();
-				this.settingsTab?.display();
+				this.setPaused(true);
 			} else {
 				this.reconnect();
 			}
@@ -113,17 +105,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 		this.addCommand({
 			id: "toggle-pause",
 			name: "Toggle presence pause",
-			callback: () => {
-				this.settings.paused = !this.settings.paused;
-				void this.saveSettings();
-				this.setStatusBar(this.rpcManager.connected);
-				if (this.settings.paused) {
-					this.rpcManager.clearActivity();
-				} else {
-					this.updateActivity();
-				}
-				this.settingsTab?.display();
-			},
+			callback: () => this.setPaused(!this.settings.paused),
 		});
 
 		// Connect and auto-reconnect every 15s + idle check
@@ -163,6 +145,18 @@ export default class ObsidianPresencePlugin extends Plugin {
 
 	get connected(): boolean {
 		return this.rpcManager.connected;
+	}
+
+	setPaused(paused: boolean): void {
+		this.settings.paused = paused;
+		void this.saveSettings();
+		this.setStatusBar(this.rpcManager.connected);
+		if (paused) {
+			this.rpcManager.clearActivity();
+		} else {
+			this.updateActivity();
+		}
+		this.settingsTab?.refresh();
 	}
 
 	reconnect(): void {
@@ -228,11 +222,14 @@ export default class ObsidianPresencePlugin extends Plugin {
 
 	private globToRegex(pattern: string): RegExp {
 		const reStr = pattern
-			.replace(/[.+^${}()|[\]\\]/g, "\\$&")
-			.replace(/\*\*/g, "\x00")
-			.replace(/\*/g, "[^/]*")
-			.replace(/\x00/g, ".*")
-			.replace(/\?/g, "[^/]");
+			.split("**")
+			.map((part) =>
+				part
+					.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+					.replace(/\*/g, "[^/]*")
+					.replace(/\?/g, "[^/]")
+			)
+			.join(".*");
 		return new RegExp(reStr);
 	}
 
@@ -266,7 +263,7 @@ export default class ObsidianPresencePlugin extends Plugin {
 		const lineCount = String(content ? content.split("\n").length : 0);
 
 		const activeFile = this.app.workspace.getActiveFile();
-		const frontmatter = activeFile
+		const frontmatter: Record<string, unknown> = activeFile
 			? (this.app.metadataCache.getFileCache(activeFile)?.frontmatter ?? {})
 			: {};
 
@@ -278,7 +275,16 @@ export default class ObsidianPresencePlugin extends Plugin {
 			.replace(/{folder}/g, folder)
 			.replace(/{wordCount}/g, wordCount)
 			.replace(/{lineCount}/g, lineCount)
-			.replace(/{meta:(\w+)}/g, (_, key) => String(frontmatter[key] ?? ""));
+			.replace(/{meta:(\w+)}/g, (_, key: string) => this.formatMeta(frontmatter[key]));
+	}
+
+	private formatMeta(value: unknown): string {
+		if (value === null || value === undefined) return "";
+		if (Array.isArray(value)) return value.map((v) => this.formatMeta(v)).join(",");
+		if (typeof value === "object") return JSON.stringify(value);
+		if (typeof value === "string") return value;
+		if (typeof value === "number" || typeof value === "boolean") return String(value);
+		return "";
 	}
 
 	private setStatusBar(connected: boolean): void {
@@ -300,7 +306,8 @@ export default class ObsidianPresencePlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = (await this.loadData()) as Partial<PresenceSettings> | null;
+		this.settings = Object.assign({}, structuredClone(DEFAULT_SETTINGS), data);
 	}
 
 	async saveSettings() {

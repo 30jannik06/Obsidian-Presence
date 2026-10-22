@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.5.0 — 2026-10-22
+
+### Changed
+- **Own lightweight Discord IPC client** replaces the unmaintained `discord-rpc` library — no more filesystem access, no bundled `ws`/`node-fetch`; `main.js` shrinks from ~380 KB to ~19 KB
+- Settings tab now uses Obsidian's declarative settings API, so all settings appear in Obsidian's settings search (Obsidian 1.13+); older versions keep the previous layout
+- Button URLs are now validated before saving
+- Stricter type-checked linting
+
+### Fixed
+- Pause button in the settings tab now updates the status bar
+- Exclusion glob regex no longer contains control characters
+- Typed frontmatter and settings access (no more `any`)
+- Timers use `window.setTimeout` for popout window compatibility
+
+### Security
+- Release workflow now publishes release notes and GitHub build provenance attestations
+
+---
+
 ## v1.4.1 — 2026-08-04
 
 ### Fixed
